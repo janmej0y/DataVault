@@ -12,14 +12,27 @@ COPY vite.config.js postcss.config.js tailwind.config.js ./
 RUN npm run build
 
 
+FROM composer:2 AS vendor
+
+WORKDIR /app
+
+COPY composer.json composer.lock ./
+
+RUN composer install \
+        --no-dev \
+        --prefer-dist \
+        --no-interaction \
+        --no-progress \
+        --optimize-autoloader \
+        --no-scripts \
+        --ignore-platform-reqs
+
+
 FROM php:8.2-apache-bookworm
 
 COPY --from=mlocati/php-extension-installer:2 /usr/bin/install-php-extensions /usr/local/bin/
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/public \
-    COMPOSER_ALLOW_SUPERUSER=1 \
-    COMPOSER_MEMORY_LIMIT=-1
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -49,6 +62,7 @@ RUN apt-get update \
 WORKDIR /var/www/html
 
 COPY . .
+COPY --from=vendor /app/vendor ./vendor
 COPY --from=assets /app/public/build ./public/build
 COPY docker/render-start.sh /usr/local/bin/render-start.sh
 
@@ -59,13 +73,6 @@ RUN mkdir -p \
         storage/framework/sessions \
         storage/framework/views \
         storage/logs
-
-RUN composer install \
-        --no-dev \
-        --prefer-dist \
-        --no-interaction \
-        --optimize-autoloader \
-        --no-scripts
 
 RUN chown -R www-data:www-data bootstrap/cache storage \
     && chmod -R ug+rwx bootstrap/cache storage
