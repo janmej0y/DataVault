@@ -13,42 +13,37 @@ RUN npm run build
 
 FROM php:8.2-apache-bookworm
 
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+COPY --from=mlocati/php-extension-installer:2 /usr/bin/install-php-extensions /usr/local/bin/
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public \
+    COMPOSER_ALLOW_SUPERUSER=1 \
+    COMPOSER_MEMORY_LIMIT=-1
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         git \
         unzip \
-        libcurl4-openssl-dev \
-        libicu-dev \
-        libonig-dev \
-        libpng-dev \
-        libxml2-dev \
-        libzip-dev \
-        zip \
-    && docker-php-ext-configure gd \
-    && docker-php-ext-install -j"$(nproc)" \
+    && install-php-extensions \
         bcmath \
         curl \
         dom \
         gd \
         intl \
         mbstring \
+        mongodb \
+        opcache \
         simplexml \
         xml \
         xmlreader \
         xmlwriter \
         zip \
-    && pecl install mongodb \
-    && docker-php-ext-enable mongodb \
     && a2enmod rewrite headers \
     && sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
         /etc/apache2/sites-available/*.conf \
         /etc/apache2/apache2.conf \
         /etc/apache2/conf-available/*.conf \
     && rm -rf /var/lib/apt/lists/*
-
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
