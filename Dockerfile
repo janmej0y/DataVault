@@ -50,8 +50,7 @@ COPY . .
 COPY --from=assets /app/public/build ./public/build
 COPY docker/render-start.sh /usr/local/bin/render-start.sh
 
-RUN cp .env.example .env \
-    && mkdir -p \
+RUN mkdir -p \
         bootstrap/cache \
         storage/app/public \
         storage/framework/cache/data \
@@ -64,8 +63,6 @@ RUN cp .env.example .env \
         --no-interaction \
         --optimize-autoloader \
         --no-scripts \
-    && php artisan package:discover --ansi \
-    && rm .env \
     && chown -R www-data:www-data bootstrap/cache storage \
     && chmod -R ug+rwx bootstrap/cache storage
 
