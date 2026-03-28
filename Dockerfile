@@ -50,8 +50,8 @@ WORKDIR /var/www/html
 
 COPY . .
 COPY --from=assets /app/public/build ./public/build
+COPY docker/render-start.sh /usr/local/bin/render-start.sh
 
-# Create Laravel folders
 RUN mkdir -p \
         bootstrap/cache \
         storage/app/public \
@@ -60,17 +60,16 @@ RUN mkdir -p \
         storage/framework/views \
         storage/logs
 
-# Install dependencies
 RUN composer install \
         --no-dev \
         --prefer-dist \
         --no-interaction \
-        --optimize-autoloader
+        --optimize-autoloader \
+        --no-scripts
 
-# Fix permissions
 RUN chown -R www-data:www-data bootstrap/cache storage \
     && chmod -R ug+rwx bootstrap/cache storage
 
 EXPOSE 10000
 
-CMD ["apache2-foreground"]
+CMD ["sh", "/usr/local/bin/render-start.sh"]
