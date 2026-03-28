@@ -50,11 +50,7 @@ COPY . .
 COPY --from=assets /app/public/build ./public/build
 COPY docker/render-start.sh /usr/local/bin/render-start.sh
 
-RUN composer install \
-        --no-dev \
-        --prefer-dist \
-        --no-interaction \
-        --optimize-autoloader \
+RUN cp .env.example .env \
     && mkdir -p \
         bootstrap/cache \
         storage/app/public \
@@ -62,6 +58,14 @@ RUN composer install \
         storage/framework/sessions \
         storage/framework/views \
         storage/logs \
+    && composer install \
+        --no-dev \
+        --prefer-dist \
+        --no-interaction \
+        --optimize-autoloader \
+        --no-scripts \
+    && php artisan package:discover --ansi \
+    && rm .env \
     && chown -R www-data:www-data bootstrap/cache storage \
     && chmod -R ug+rwx bootstrap/cache storage
 
