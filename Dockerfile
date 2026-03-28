@@ -19,6 +19,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         git \
         unzip \
+        libcurl4-openssl-dev \
         libicu-dev \
         libonig-dev \
         libpng-dev \
@@ -28,6 +29,7 @@ RUN apt-get update \
     && docker-php-ext-configure gd \
     && docker-php-ext-install -j"$(nproc)" \
         bcmath \
+        curl \
         dom \
         gd \
         intl \
