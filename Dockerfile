@@ -28,10 +28,14 @@ RUN apt-get update \
     && docker-php-ext-configure gd \
     && docker-php-ext-install -j"$(nproc)" \
         bcmath \
+        dom \
         gd \
         intl \
         mbstring \
+        simplexml \
         xml \
+        xmlreader \
+        xmlwriter \
         zip \
     && pecl install mongodb \
     && docker-php-ext-enable mongodb \
