@@ -12,9 +12,21 @@ COPY vite.config.js postcss.config.js tailwind.config.js ./
 RUN npm run build
 
 
-FROM composer:2 AS vendor
+FROM php:8.2-cli-bookworm AS vendor
 
 WORKDIR /app
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+ENV COMPOSER_ALLOW_SUPERUSER=1 \
+    COMPOSER_MEMORY_LIMIT=-1
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        git \
+        unzip \
+        zip \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY composer.json composer.lock ./
 
