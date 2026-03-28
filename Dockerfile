@@ -8,6 +8,7 @@ RUN npm ci
 COPY resources ./resources
 COPY public ./public
 COPY vite.config.js postcss.config.js tailwind.config.js ./
+
 RUN npm run build
 
 
@@ -49,24 +50,27 @@ WORKDIR /var/www/html
 
 COPY . .
 COPY --from=assets /app/public/build ./public/build
-COPY docker/render-start.sh /usr/local/bin/render-start.sh
 
+# Create Laravel folders
 RUN mkdir -p \
         bootstrap/cache \
         storage/app/public \
         storage/framework/cache/data \
         storage/framework/sessions \
         storage/framework/views \
-        storage/logs \
-    && composer install \
+        storage/logs
+
+# Install dependencies
+RUN composer install \
         --no-dev \
         --prefer-dist \
         --no-interaction \
-        --optimize-autoloader \
-        --no-scripts \
-    && chown -R www-data:www-data bootstrap/cache storage \
+        --optimize-autoloader
+
+# Fix permissions
+RUN chown -R www-data:www-data bootstrap/cache storage \
     && chmod -R ug+rwx bootstrap/cache storage
 
 EXPOSE 10000
 
-CMD ["sh", "/usr/local/bin/render-start.sh"]
+CMD ["apache2-foreground"]
